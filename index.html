@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Nerve</title>
+<meta name="theme-color" content="#efe9dc">
+<meta name="application-name" content="Nerve">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nerve">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="Pass-the-phone timing games for a group.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+:root{--pad:clamp(12px,4.5vmin,34px);--sat:env(safe-area-inset-top,0px);--sar:env(safe-area-inset-right,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px)}
+html{margin:0;height:100%;background:#efe9dc;overscroll-behavior:none}
+body{font-family:"SF Pro Display","Helvetica Neue",Inter,system-ui,sans-serif;background:linear-gradient(165deg,#f7f3ec,#e9e2d3);color:#12151c;margin:0;position:fixed;inset:0;width:100%;overflow:hidden;overscroll-behavior:none;touch-action:none}
+[hidden]{display:none!important}
+button{font:inherit;cursor:pointer}
+
+/* launcher */
+#menu{max-width:1100px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:calc(var(--sat) + var(--pad)) calc(var(--sar) + var(--pad)) calc(var(--sab) + var(--pad)) calc(var(--sal) + var(--pad))}
+#menu h1{font-size:clamp(28px,8vmin,64px);line-height:1;letter-spacing:-.04em;margin:0 0 .25em;font-weight:800}
+#menu p{margin:0 0 clamp(10px,2.6vmin,20px);color:#5b5f6a;font-size:clamp(13px,2.4vmin,18px);line-height:1.4}
+#tiles{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(8px,1.8vmin,16px)}
+.tile{position:relative;display:flex;align-items:flex-end;flex:1;min-height:0;width:100%;padding:clamp(12px,3vmin,26px);border:0;border-radius:clamp(16px,4vmin,30px);text-align:left;color:#fff;transition:transform .12s}
+.tile:active{transform:scale(.97)}
+@media (hover:hover){.tile:hover{transform:translateY(-3px)}.tile:active{transform:scale(.98)}}
+.tile small{display:block;font-size:clamp(11px,1.9vmin,14px);font-weight:700;opacity:.7;letter-spacing:.06em;margin-bottom:.5em}
+.tile b{display:block;font-size:clamp(18px,4.4vmin,34px);letter-spacing:-.03em;line-height:1.05;margin-bottom:.25em}
+.tile .d{font-size:clamp(11px,2vmin,16px);line-height:1.35;opacity:.85;display:block;max-width:26em}
+.tile svg{position:absolute;top:clamp(12px,3vmin,26px);right:clamp(12px,3vmin,26px);width:clamp(30px,8vmin,72px);height:clamp(30px,8vmin,72px)}
+.t-dont{background:linear-gradient(140deg,#3a56ff,#1830d8)}
+.t-exact{background:linear-gradient(140deg,#ff7a3a,#ff4d12)}
+.t-bomb{background:linear-gradient(140deg,#2a2e38,#0d0f14)}
+@media (orientation:landscape) and (min-aspect-ratio:3/2){#tiles{flex-direction:row}}
+@media (min-width:700px) and (orientation:portrait){#menu{padding-top:calc(var(--sat) + 6vmin)}}
+
+/* setup */
+#setup{position:fixed;inset:0;z-index:10;color:#fff;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:calc(var(--sat) + var(--pad)) calc(var(--sar) + var(--pad)) calc(var(--sab) + var(--pad)) calc(var(--sal) + var(--pad))}
+#setup[data-g=dont]{background:linear-gradient(160deg,#4a65ff,#1228c4)}
+#setup[data-g=exact]{background:linear-gradient(160deg,#ff8a4c,#f2430c)}
+#setup[data-g=bomb]{background:linear-gradient(160deg,#1c1f27,#040506)}
+#sIn{margin:auto;width:100%;max-width:clamp(280px,62vmin,560px)}
+#sback{width:auto;background:rgba(255,255,255,.2);border:0;border-radius:999px;color:#fff;font-size:clamp(14px,2.8vmin,20px);font-weight:700;padding:.75em 1.4em;margin-bottom:clamp(12px,3vmin,24px)}
+#setup h2{font-size:clamp(26px,7.5vmin,52px);letter-spacing:-.04em;margin:0 0 .2em;line-height:1}
+#sDesc{margin:0 0 clamp(12px,3.5vmin,28px);opacity:.88;line-height:1.45;font-size:clamp(13px,2.5vmin,18px)}
+#setup label{display:block;font-size:clamp(12px,2.3vmin,16px);font-weight:600;opacity:.9;margin:clamp(8px,2vmin,16px) 0 8px}
+#sVal{width:100%;height:clamp(54px,13vmin,104px);font-family:inherit;font-size:clamp(30px,9vmin,64px);font-weight:800;padding:0 12px;border:2px solid rgba(255,255,255,.4);border-radius:clamp(14px,3.5vmin,26px);background:rgba(255,255,255,.16);color:#fff;text-align:center;-webkit-user-select:text;user-select:text;font-variant-numeric:tabular-nums;outline:none;-webkit-appearance:none;appearance:none}
+.step{display:flex;align-items:center;gap:14px}
+.step b{flex:1;font-size:clamp(30px,9vmin,64px);text-align:center;letter-spacing:-.03em}
+.step button{width:clamp(48px,11vmin,80px);height:clamp(48px,11vmin,80px);border-radius:50%;border:1.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;font-size:clamp(24px,6vmin,40px)}
+.chk{display:flex!important;align-items:center;gap:12px}
+.chk input{width:24px;height:24px}
+.pill{width:100%;border:0;border-radius:999px;background:#fff;color:#12151c;font-weight:800;font-size:clamp(16px,3.4vmin,24px);padding:.9em;letter-spacing:-.01em}
+.pill:active{transform:scale(.97)}
+#go{margin-top:clamp(14px,3.5vmin,28px)}
+
+/* game */
+#stage{position:fixed;inset:0;z-index:20;container-type:size;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;touch-action:none;padding:var(--sat) var(--sar) var(--sab) var(--sal);transition:background .2s}
+#stage.g-dont{background:radial-gradient(120% 120% at 20% 0%,#4a65ff,#1228c4 70%)}
+#stage.g-exact{background:radial-gradient(120% 120% at 20% 0%,#ff8a4c,#f2430c 70%)}
+#stage.g-bomb{background:radial-gradient(120% 120% at 20% 0%,#2a2d36,#050608 70%)}
+#stage.lose{background:radial-gradient(120% 120% at 20% 0%,#ff6a55,#c4160f 70%)}
+#who{font-size:max(12px,min(10cqh,5.5cqw));font-weight:700;letter-spacing:-.02em;opacity:.95;text-align:center;padding:0 4cqw}
+#big{font-size:max(34px,min(46cqh,29cqw));font-weight:800;line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums;margin:2cqh 0}
+#big svg{height:max(48px,min(42cqh,34cqw));width:auto;display:block;margin:0 auto}
+#cd{font-size:max(20px,min(13cqh,16cqw));font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin-bottom:1cqh}
+#stage.cdmode #big svg{height:max(40px,min(30cqh,22cqw))}
+#hint{font-size:max(11px,min(7cqh,4cqw));opacity:.85;text-align:center;padding:0 4cqw}
+#exit{position:absolute;top:calc(var(--sat) + 3cqh);right:calc(var(--sar) + 3cqw);border:0;border-radius:999px;padding:.8em 1.6em;font-size:max(12px,min(5.5cqh,3.2cqw));font-weight:700;background:rgba(255,255,255,.2);color:#fff}
+#res{max-height:60cqh;overflow-y:auto;width:min(88cqw,680px);margin-top:2cqh;touch-action:pan-y}
+#res div{font-size:max(12px,min(6.5cqh,3.8cqw));padding:.8cqh 0;border-bottom:1px solid rgba(255,255,255,.22);font-variant-numeric:tabular-nums}
+#res div.win{font-weight:800}
+#again{width:auto;padding:.8em 2.4em;font-size:max(14px,min(7cqh,4cqw));margin-top:2cqh}
+
+/* smartwatch / tiny screens */
+@media (max-width:260px),(max-height:260px){
+  :root{--pad:8%}
+  #menu h1{font-size:22px}#menu p,.tile .d,.tile svg,.tile small{display:none}
+  .tile b{font-size:16px;margin:0}.tile{padding:8px 12px;align-items:center;border-radius:14px}
+  #setup{padding:12% 10%}#sDesc{display:none}#setup h2{font-size:20px}#sVal{height:46px;font-size:26px}
+  .step button{width:40px;height:40px}.step b{font-size:26px}
+  #sback{font-size:12px;padding:.5em 1em;margin-bottom:8px}
+  #stage{padding:8%}
+  #exit{right:auto;left:50%;transform:translateX(-50%);top:calc(var(--sat) + 5cqh);padding:.4em 1em;font-size:11px}
+  #who{margin-top:14px}
+}
+</style>
+</head>
+<body>
+<div id="menu">
+  <h1>Nerve.</h1>
+  <p>Three timing games for a group. Pick one, pass the phone, and try to keep your cool.</p>
+  <div id="tiles">
+  <button class="tile t-dont" data-g="dont"><svg viewBox="0 0 64 64" fill="none"><rect x="4" y="28" width="56" height="8" rx="4" fill="#fff" opacity=".3"/><rect x="4" y="28" width="36" height="8" rx="4" fill="#fff"/><rect x="46" y="16" width="4" height="32" rx="2" fill="#fff"/></svg><div><small>01</small><b>Don’t Go Over</b><span class="d">Start and stop the clock. Stop past the limit and you lose.</span></div></button>
+  <button class="tile t-exact" data-g="exact"><svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="4"><circle cx="32" cy="32" r="27" opacity=".4"/><circle cx="32" cy="32" r="16" opacity=".7"/><circle cx="32" cy="32" r="4" fill="#fff"/></svg><div><small>02</small><b>Exact Second</b><span class="d">Hidden timer. Stop closest to the target.</span></div></button>
+  <button class="tile t-bomb" data-g="bomb"><svg viewBox="0 0 64 64" fill="none"><circle cx="28" cy="40" r="19" fill="#fff"/><path d="M36 22c3-6 8-6 12-12" stroke="#fff" stroke-width="4" stroke-linecap="round"/><circle cx="52" cy="8" r="5" fill="#ff7a3a"/></svg><div><small>03</small><b>Hold the Bomb</b><span class="d">Hold to burn a secret fuse. If it runs out in your hand, boom.</span></div></button>
+  </div>
+</div>
+
+<section id="setup" hidden><div id="sIn">
+  <button id="sback">← All games</button>
+  <h2 id="sTitle"></h2>
+  <p id="sDesc"></p>
+  <label id="sLabel" for="sVal"></label>
+  <input id="sVal" type="text" inputmode="decimal" autocomplete="off">
+  <div id="sPl" hidden><label>Players</label><div class="step"><button id="minus">−</button><b id="np">3</b><button id="plus">+</button></div></div>
+  <label id="sChkW" class="chk" hidden><input id="sChk" type="checkbox"><span>Show the countdown (easy mode)</span></label>
+  <button id="go" class="pill">Start</button>
+</div></section>
+
+<div id="stage" hidden>
+  <button id="exit">Menu</button>
+  <div id="who"></div>
+  <div id="big"></div>
+  <div id="cd" hidden></div>
+  <div id="hint"></div>
+  <div id="res" hidden></div>
+  <button id="again" class="pill" hidden>Play again</button>
+</div>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var INFO={
+ dont:{t:'Don’t Go Over',d:'Tap to start the clock, tap to stop it, then pass the phone. The time keeps climbing. Stop it past the limit and you lose.',l:'Time limit (seconds)',v:'5'},
+ exact:{t:'Exact Second',d:'The timer is hidden. Tap to start, tap when you think the target has passed. Closest to the target wins.',l:'Target time (seconds)',v:'7'},
+ bomb:{t:'Hold the Bomb',d:'The bomb has a secret fuse. Hold the screen to burn it, let go to stop and pass it on. If it runs out while you hold, it explodes.',l:'Longest possible fuse (seconds)',v:'20'}
+};
+var g='',n=3,val=5,show=false,bk='';
+var COL={dont:'#1228c4',exact:'#f2430c',bomb:'#050608'};
+function paint(c){document.documentElement.style.background=c}
+var s={state:'',t:0,base:0,t0:0,raf:0,first:true,res:[],turn:0,fuse:0,used:0,last:0,lock:0};
+var BOMB='<svg viewBox="0 0 100 100"><circle cx="46" cy="60" r="31" fill="#f1f3f7"/><path d="M26 52a22 22 0 0 1 16-14" stroke="#0d0f14" stroke-width="4" stroke-linecap="round" fill="none" opacity=".25"/><rect x="38" y="22" width="16" height="10" rx="2" fill="#f1f3f7"/><path d="M50 22c0-9 10-8 14-14" stroke="#f1f3f7" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M66 2l3 6 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" fill="#ff7a3a"/></svg>';
+function star(a,b){var p=[];for(var i=0;i<28;i++){var r=i%2?b:a,t=Math.PI*i/14;p.push((50+r*Math.sin(t)).toFixed(1)+','+(50-r*Math.cos(t)).toFixed(1))}return p.join(' ')}
+var BOOM='<svg viewBox="0 0 100 100"><polygon points="'+star(48,26)+'" fill="#ffd23f"/><polygon points="'+star(30,16)+'" fill="#fff"/></svg>';
+function fmt(x){return Math.max(0,x).toFixed(2)}
+function num(x,d){x=parseFloat(String(x).replace(',','.'));return x>0?x:d}
+function say(w,b,h,html){$('who').textContent=w;if(html)$('big').innerHTML=b;else $('big').textContent=b;$('hint').textContent=h}
+function buzz(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+function unfocus(){try{document.activeElement&&document.activeElement.blur()}catch(e){}}
+
+document.querySelectorAll('.tile').forEach(function(b){b.onclick=function(){openSetup(b.getAttribute('data-g'))}});
+function openSetup(k){
+  g=k;var i=INFO[k];
+  $('setup').setAttribute('data-g',k);
+  $('sTitle').textContent=i.t;$('sDesc').textContent=i.d;$('sLabel').textContent=i.l;$('sVal').value=i.v;
+  $('sPl').hidden=k!=='exact';$('sChkW').hidden=k!=='bomb';
+  $('setup').hidden=false;paint(COL[k]);
+}
+$('sback').onclick=function(){$('setup').hidden=true;paint('#efe9dc')};
+$('minus').onclick=function(){if(n>2){n--;$('np').textContent=n}};
+$('plus').onclick=function(){if(n<8){n++;$('np').textContent=n}};
+$('go').onclick=function(){
+  val=num($('sVal').value,parseFloat(INFO[g].v));
+  if(g==='bomb'&&val<3)val=3;
+  show=$('sChk').checked;
+  $('setup').hidden=true;$('stage').hidden=false;
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen')}catch(e){}
+  newGame();
+};
+$('sVal').addEventListener('keydown',function(e){if(e.key==='Enter')$('go').click()});
+$('exit').onclick=function(e){e.stopPropagation();exitGame()};
+function exitGame(){stopAll();$('stage').hidden=true;$('setup').hidden=false;paint(COL[g]);unfocus()}
+$('again').onclick=function(e){e.stopPropagation();newGame()};
+function stopAll(){cancelAnimationFrame(s.raf);s.state=''}
+
+function newGame(){
+  stopAll();unfocus();
+  $('stage').className='g-'+g+(g==='bomb'&&show?' cdmode':'');paint(COL[g]);
+  $('cd').hidden=true;bk='';$('big').style.transform='none';
+  $('res').hidden=true;$('again').hidden=true;
+  s.t=0;s.first=true;s.res=[];s.turn=0;s.used=0;s.lock=0;
+  if(g==='bomb')s.fuse=Math.max(2,val*(.2+.8*Math.random()));
+  ready();
+}
+function ready(){
+  s.state='ready';
+  if(g==='dont')say(s.first?'First player':'Next player',fmt(s.t),'Tap anywhere to start');
+  else if(g==='exact')say('Player '+(s.turn+1)+' · your target',fmt(val)+'s','Tap to start. The timer is hidden');
+  else{$('who').textContent=s.first?'First player':'Next player';$('hint').textContent='Press and hold to burn the fuse';bk='';drawBomb(false)}
+}
+function lose(who,hint,big){
+  s.state='over';$('stage').classList.add('lose');paint('#c4160f');buzz(g==='bomb'?[80,40,300]:250);
+  say(who,big===undefined?fmt(s.t):big,hint,big!==undefined);$('again').hidden=false;
+}
+function dTick(){s.t=s.base+(performance.now()-s.t0)/1000;$('big').textContent=fmt(s.t);s.raf=requestAnimationFrame(dTick)}
+function drawBomb(sh){
+  var b=$('big');
+  if(bk!=='b'){bk='b';b.innerHTML=BOMB}
+  $('cd').hidden=!show;if(show)$('cd').textContent=fmt(s.fuse-s.used);
+  var p=Math.min(1,s.used/s.fuse),m=sh?2+p*p*26:0;
+  b.style.transform=m?'translate('+(Math.random()-.5)*m+'px,'+(Math.random()-.5)*m+'px)':'none';
+}
+function bTick(now){
+  s.used+=(now-s.last)/1000;s.last=now;
+  if(s.used>=s.fuse){cancelAnimationFrame(s.raf);$('big').style.transform='none';$('cd').hidden=true;bk='x';lose('Boom! You lose','The fuse was '+fmt(s.fuse)+'s',BOOM);return}
+  drawBomb(true);s.raf=requestAnimationFrame(bTick);
+}
+function release(){
+  if(g!=='bomb'||s.state!=='holding')return;
+  cancelAnimationFrame(s.raf);s.first=false;s.lock=performance.now()+450;ready();
+  $('hint').textContent='Safe. Pass it on, then press and hold';
+}
+function press(){
+  var now=performance.now();
+  if(now<s.lock)return;
+  if(g==='dont'){
+    if(s.state==='ready'){s.state='running';s.base=s.t;s.t0=now;$('who').textContent='Tap to stop';$('hint').textContent='';dTick()}
+    else if(s.state==='running'){
+      cancelAnimationFrame(s.raf);s.t=s.base+(now-s.t0)/1000;$('big').textContent=fmt(s.t);s.lock=now+450;
+      if(s.t>val)lose('You lose','Went over '+fmt(val)+'s');
+      else{s.first=false;ready();$('hint').textContent='Safe. Pass it on, then tap to start'}
+    }
+  }else if(g==='exact'){
+    if(s.state==='ready'){s.state='running';s.t0=now;$('who').textContent='Player '+(s.turn+1);$('hint').textContent='Counting… tap when time is up'}
+    else if(s.state==='running'){
+      s.res.push((now-s.t0)/1000);s.turn++;s.lock=now+450;
+      if(s.turn>=n)finishExact();else{ready();$('hint').textContent='Locked in. Pass it on, then tap to start'}
+    }
+  }else if(g==='bomb'&&s.state==='ready'){
+    s.state='holding';s.last=now;$('who').textContent='Holding…';$('hint').textContent='Let go to stop';s.raf=requestAnimationFrame(bTick);
+  }
+}
+$('stage').addEventListener('pointerdown',function(e){if(!e.target.closest('button'))press()});
+['pointerup','pointercancel','pointerleave'].forEach(function(v){$('stage').addEventListener(v,release)});
+document.addEventListener('visibilitychange',function(){if(document.hidden)release()});
+$('stage').addEventListener('contextmenu',function(e){e.preventDefault()});
+
+/* keyboard (laptops, iPad keyboards) */
+document.addEventListener('keydown',function(e){
+  if($('stage').hidden)return;
+  if(e.key==='Escape'){exitGame();return}
+  if((e.code==='Space'||e.key==='Enter')&&!e.repeat){
+    var a=document.activeElement;if(a&&a.tagName==='BUTTON')return;
+    e.preventDefault();press();
+  }
+});
+document.addEventListener('keyup',function(e){if(!$('stage').hidden&&(e.code==='Space'||e.key==='Enter'))release()});
+
+function finishExact(){
+  s.state='over';
+  var r=s.res.map(function(t,i){return{p:i+1,t:t,d:Math.abs(t-val)}}).sort(function(a,b){return a.d-b.d});
+  var tie=r.length>1&&Math.abs(r[0].d-r[1].d)<0.005;
+  say(tie?'Tie at the top!':'Player '+r[0].p+' wins!','','Target: '+fmt(val)+'s');
+  $('big').textContent='';
+  var box=$('res');box.innerHTML='';
+  r.forEach(function(x,i){var d=document.createElement('div');if(i===0)d.className='win';d.textContent=(i+1)+'. Player '+x.p+' — '+fmt(x.t)+'s ('+fmt(x.d)+' off)';box.appendChild(d)});
+  box.hidden=false;$('again').hidden=false;buzz(120);
+}
+document.addEventListener('touchmove',function(e){if(!e.target.closest('#res,#setup'))e.preventDefault()},{passive:false});
+['gesturestart','gesturechange','dblclick'].forEach(function(v){document.addEventListener(v,function(e){e.preventDefault()})});
+try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('sw.js')}catch(e){}
+</script>
+</body>
+</html>
